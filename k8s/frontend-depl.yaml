@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: dps1981/blog-frontend
+          image: 2021mt93731/blog-frontend
 ---
 apiVersion: v1 
 kind: Service
