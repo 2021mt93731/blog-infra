@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: query
-          image: dps1981/query
+          image: 2021mt93731/query-service
 ---
 apiVersion: v1 
 kind: Service

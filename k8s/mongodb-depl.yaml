@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: order-db
+  name: mongo-db
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: order-db
-  serviceName: order-db-svc
+      app: mongo-db
+  serviceName: mongo-db-svc
   template:
     metadata:
       labels:
-        app: order-db
+        app: mongo-db
     spec:
       containers:
       - name: mongo
@@ -24,16 +24,16 @@ spec:
       volumes:
       - name: data
         persistentVolumeClaim:
-          claimName: order-db-pvc
+          claimName: mongo-db-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: order-db-svc
+  name: mongo-db-svc
 spec:
   clusterIP: None
   selector:
-    app: order-db
+    app: mongo-db
   ports:
   - name: mongo
     port: 27017
@@ -42,7 +42,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: order-db-pvc
+  name: mongo-db-pvc
 spec:
   accessModes:
   - ReadWriteOnce

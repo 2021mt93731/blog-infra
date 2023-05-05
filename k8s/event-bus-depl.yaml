@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: event-bus
-          image: dps1981/event-bus
+          image: 2021mt93731/event-bus
 ---
 apiVersion: v1 
 kind: Service

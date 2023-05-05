@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: comments
-          image: dps1981/comments
+          image: 2021mt93731/comments-service
 ---
 apiVersion: v1 
 kind: Service
