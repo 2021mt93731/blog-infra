@@ -1,0 +1,295 @@
+# Posts Service #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: posts-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: posts
+  template:
+    metadata:
+      labels: 
+        app: posts
+    spec:
+      containers:
+        - name: posts
+          image: 2021mt93731/posts-service
+
+---
+apiVersion: v1 
+kind: Service
+metadata: 
+  name: posts-srv
+spec:
+  selector: 
+    app: posts
+  ports: 
+    - name: posts
+      protocol: TCP
+      port: 4000
+      targetPort: 4000
+---
+
+# Comments Service #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comments-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comments
+  template:
+    metadata:
+      labels: 
+        app: comments
+    spec:
+      containers:
+        - name: comments
+          image: 2021mt93731/comments-service
+---
+apiVersion: v1 
+kind: Service
+metadata: 
+  name: comments-srv
+spec:
+  selector: 
+    app: comments
+  ports: 
+    - name: comments
+      protocol: TCP
+      port: 4001
+      targetPort: 4001
+---
+
+# Moderation Service #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moderation-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: moderation
+  template:
+    metadata:
+      labels: 
+        app: moderation
+    spec:
+      containers:
+        - name: moderation
+          image: 2021mt93731/moderation-service
+---
+apiVersion: v1 
+kind: Service
+metadata: 
+  name: moderation-srv
+spec:
+  selector: 
+    app: moderation
+  ports: 
+    - name: moderation
+      protocol: TCP
+      port: 4003
+      targetPort: 4003
+---
+
+# Query Service #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: query-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: query
+  template:
+    metadata:
+      labels: 
+        app: query
+    spec:
+      containers:
+        - name: query
+          image: 2021mt93731/query-service
+---
+apiVersion: v1 
+kind: Service
+metadata: 
+  name: query-srv
+spec:
+  selector: 
+    app: query
+  ports: 
+    - name: query
+      protocol: TCP
+      port: 4002
+      targetPort: 4002
+---
+
+# Event Bus #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-bus-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-bus
+  template:
+    metadata:
+      labels: 
+        app: event-bus
+    spec:
+      containers:
+        - name: event-bus
+          image: 2021mt93731/event-bus
+---
+apiVersion: v1 
+kind: Service
+metadata: 
+  name: event-bus-srv
+spec:
+  selector: 
+    app: event-bus
+  ports: 
+    - name: event-bus
+      protocol: TCP
+      port: 4005
+      targetPort: 4005
+---
+
+# FrontEnd #
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels: 
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: 2021mt93731/blog-frontend:local-mini
+---
+apiVersion: v1 
+kind: Service
+metadata: 
+  name: frontend-srv
+spec:
+  selector: 
+    app: frontend
+  ports: 
+    - name: frontend
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+
+---
+
+# Mongo DB #
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo-db
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mongo-db
+  serviceName: mongo-db-svc
+  template:
+    metadata:
+      labels:
+        app: mongo-db
+    spec:
+      containers:
+      - name: mongo
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: data
+          mountPath: /data/db
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mongo-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-db-svc
+spec:
+  clusterIP: None
+  selector:
+    app: mongo-db
+  ports:
+  - name: mongo
+    port: 27017
+    targetPort: 27017
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-db-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+
+# Ingress service
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: 
+  name: ingress-srv
+  annotations: 
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - http:
+        paths: 
+          - path: /posts/create
+            pathType: Prefix
+            backend:
+              service: 
+                name: posts-srv
+                port: 
+                  number: 4000
+          - path: /posts
+            pathType: Prefix
+            backend:
+              service: 
+                name: query-srv
+                port: 
+                  number: 4002
+          - path: /posts/?(.*)/comments
+            pathType: Prefix
+            backend:
+              service: 
+                name: comments-srv
+                port: 
+                  number: 4001
+          - path: /?(.*)
+            pathType: Prefix
+            backend:
+              service: 
+                name: frontend-srv
+                port: 
+                  number: 3000
