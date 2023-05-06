@@ -1,0 +1,47 @@
+version: "3"
+services:
+  posts-srv:
+    image: 2021mt93731/posts-service
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo-db-svc
+      - event-bus-srv
+  comments-srv:
+    image: 2021mt93731/comments-service
+    ports:
+      - "4001:4001"
+    depends_on:
+      - mongo-db-svc
+      - event-bus-srv
+  moderation-srv:
+    image: 2021mt93731/moderation-service
+    ports:
+      - "4003:4003"
+    depends_on:
+      - event-bus-srv
+  query-srv:
+    image: 2021mt93731/query-service
+    ports:
+      - "4002:4002"
+    depends_on:
+      - mongo-db-svc
+      - event-bus-srv
+  event-bus-srv:
+    image: 2021mt93731/event-bus
+    ports:
+      - "4005:4005"
+  frontend-srv:
+    image: 2021mt93731/blog-frontend:local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - posts-srv
+      - comments-srv
+      - query-srv
+  mongo-db-svc:
+    image: mongo
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
