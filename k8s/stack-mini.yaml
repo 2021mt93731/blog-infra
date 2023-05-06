@@ -181,7 +181,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 2021mt93731/blog-frontend:local-mini
+          image: 2021mt93731/blog-frontend:mini
 ---
 apiVersion: v1 
 kind: Service
